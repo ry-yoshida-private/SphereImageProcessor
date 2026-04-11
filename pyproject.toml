@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fisheye_image"
+version = "0.0.1"
+authors = [
+  { name = "Ryuto Yoshida" },
+]
+description = "Fisheye image remapping (equidistant model) with OpenCV, integrated with rotation and geometry helpers."
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "numpy",
+    "opencv-contrib-python",
+    "units @ git+https://github.com/ry-yoshida-private/Units.git",
+    "rotation @ git+https://github.com/ry-yoshida-private/Rotation.git",
+    "geometry @ git+https://github.com/ry-yoshida-private/Geometry.git",
+]
+
+[project.urls]
+Homepage = "https://github.com/ry-yoshida-private/FisheyeImage"
+"Bug Tracker" = "https://github.com/ry-yoshida-private/FisheyeImage/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+fisheye = ["py.typed"]
