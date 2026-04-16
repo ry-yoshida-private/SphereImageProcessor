@@ -1,21 +1,16 @@
 import numpy as np
 
 from ..processor import FisheyeProcessor
+
 from rotation import RotationMatrix
 from geometry.planar import PolarCoordinate
 from geometry.spatial import Vectors3D
 from units import Angle
 
-class EquidistantFisheyeProcessor(FisheyeProcessor):
+
+class OrthographicFisheyeProcessor(FisheyeProcessor):
     """
-    Fisheye → rectilinear-style mapping using equidistant projection model.
-    
-    Attributes
-    ---------- 
-    image: np.ndarray
-        The image to process.
-    params: FisheyeProcessorParameters
-        Parameters for fisheye processor.
+    Fisheye remapping using orthographic projection model.
     """
 
     def _map_rotation_to_uv(
@@ -23,12 +18,7 @@ class EquidistantFisheyeProcessor(FisheyeProcessor):
         rotation_matrix: RotationMatrix,
     ) -> tuple[np.ndarray, np.ndarray]:
         """
-        Convert fisheye image to equidistant image.
-
-        ** Tips **
-        u: horizontal axis of image(screen) coordinate system
-           u=r*cosθ
-        v: vertical axis of image(screen) coordinate system
+        Convert fisheye image to orthographic image.
 
         Parameters
         ----------
@@ -44,7 +34,6 @@ class EquidistantFisheyeProcessor(FisheyeProcessor):
         rotated_direction_vectors: Vectors3D = Vectors3D(
             value=direction_vectors.value @ rotation_matrix.T
         )
-
         azimuthal_angles: Angle = rotated_direction_vectors.to_azimuthal_angles(
             up_index=2
         )
@@ -52,16 +41,12 @@ class EquidistantFisheyeProcessor(FisheyeProcessor):
             forward_index=0,
             right_index=1,
         )
-        radius: np.ndarray = azimuthal_angles.value / (
-            self.params.camera_hfov.radian / 2
-        )
+        max_incident_angle = self.params.camera_hfov.radian / 2
+        radius: np.ndarray = np.sin(azimuthal_angles.value) / np.sin(max_incident_angle)
         polar_coordinate = PolarCoordinate(
             radius=radius,
             angle=polar_angles,
         )
-        u_coordinates, v_coordinates = (
-            self._PolarCoordinate2NormalizedCartesianCoordinate(
-                polar_coordinate=polar_coordinate
-            )
+        return self._PolarCoordinate2NormalizedCartesianCoordinate(
+            polar_coordinate=polar_coordinate
         )
-        return u_coordinates, v_coordinates

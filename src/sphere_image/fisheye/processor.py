@@ -84,7 +84,7 @@ class FisheyeProcessor(ABC):
         depth_grid = np.ones_like(horizontal_grid)
 
         direction_vectors = np.stack(
-            [horizontal_grid, vertical_grid, depth_grid], axis=-1
+            [depth_grid, horizontal_grid, vertical_grid], axis=-1
         )
         direction_vectors /= np.linalg.norm(direction_vectors, axis=-1, keepdims=True)
         return Vectors3D(value=direction_vectors.reshape(-1, 3))
@@ -109,8 +109,8 @@ class FisheyeProcessor(ABC):
         """
         u_coordinates: np.ndarray = polar_coordinate.u
         v_coordinates: np.ndarray = polar_coordinate.v
-        normed_u_coordinates = 0.5 + 0.5 * (u_coordinates)
-        normed_v_coordinates = 0.5 + 0.5 * (v_coordinates)
+        normed_u_coordinates: np.ndarray = 0.5 + 0.5 * (u_coordinates)
+        normed_v_coordinates: np.ndarray = 0.5 + 0.5 * (v_coordinates)
         return (
             normed_u_coordinates.reshape(
                 self.params.output_image_h, self.params.output_image_w
