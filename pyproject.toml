@@ -32,4 +32,4 @@ Homepage = "https://github.com/ry-yoshida-private/FisheyeImage"
 where = ["src"]
 
 [tool.setuptools.package-data]
-fisheye = ["py.typed"]
+sphere_image = ["py.typed"]

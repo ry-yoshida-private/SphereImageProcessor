@@ -67,10 +67,4 @@ class FisheyeProcessorParameters:
         FisheyeProcessor
             The concrete FisheyeProcessor for self.method.
         """
-        match self.method:
-            case FisheyeProjectionMethod.EQUIDISTANT:
-                from .processors.equidistant import EquidistantFisheyeProcessor
-                processor_class = EquidistantFisheyeProcessor
-            case _:
-                raise ValueError(f"Not implemented error. -> method: {self.method}")
-        return processor_class(image=image, params=self)
+        return self.method.processor_class(image=image, params=self)

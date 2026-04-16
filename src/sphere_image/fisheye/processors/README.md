@@ -19,7 +19,7 @@ Directions from the abstract base class are expressed in camera coordinates, rot
 Run as a module from any working directory after the package is installed:
 
 ```bash
-python -m fisheye.processors.equidistant -i in.jpg -o out.jpg
+python -m sphere_image.processors.equidistant -i in.jpg -o out.jpg
 ```
 
 Options:
