@@ -1,4 +1,3 @@
-from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 
 import cv2
@@ -12,18 +11,21 @@ from geometry.spatial import Vectors3D
 
 
 @dataclass
-class FisheyeProcessor(ABC):
+class FisheyeProcessor:
+    """
+    Fisheye processor.
+    
+    Attributes
+    ----------
+    image: np.ndarray
+        The image to process.
+    params: FisheyeProcessorParameters
+        The parameters for the fisheye processor.
+    """
     image: np.ndarray
     params: FisheyeProcessorParameters = field(
         default_factory=FisheyeProcessorParameters
     )
-
-    @abstractmethod
-    def _map_rotation_to_uv(
-        self,
-        rotation_matrix: RotationMatrix,
-    ) -> tuple[np.ndarray, np.ndarray]:
-        """Return normalized image-plane (u, v) in [0, 1] for remap."""
 
     def run_pipeline(self, rotation_matrix: RotationMatrix) -> np.ndarray:
         """
@@ -45,6 +47,47 @@ class FisheyeProcessor(ABC):
         return self.remap(
             u_coordinates=u_coordinates,
             v_coordinates=v_coordinates,
+        )
+
+    def _map_rotation_to_uv(
+        self,
+        rotation_matrix: RotationMatrix,
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Return normalized image-plane (u, v) in [0, 1] for remap.
+        
+        Parameters
+        ----------
+        rotation_matrix: RotationMatrix
+            Rotation matrix.
+
+        Returns
+        -------
+        tuple[np.ndarray, np.ndarray]
+            The u and v coordinates.
+        """
+        direction_vectors: Vectors3D = self._create_direction_vector_grid()
+        rotated_direction_vectors: Vectors3D = Vectors3D(
+            value=direction_vectors.value @ rotation_matrix.T
+        )
+        azimuthal_angles = rotated_direction_vectors.to_azimuthal_angles(
+            up_index=2
+        )
+        polar_angles = rotated_direction_vectors.to_polar_angles(
+            forward_index=0,
+            right_index=1,
+        )
+        max_incident_angle = float(self.params.camera_hfov.radian[0] / 2)
+        radius = self.params.method.calculate_radius(
+            f=max_incident_angle,
+            angle=azimuthal_angles,
+        )
+        polar_coordinate = PolarCoordinate(
+            radius=radius,
+            angle=polar_angles,
+        )
+        return self._PolarCoordinate2NormalizedCartesianCoordinate(
+            polar_coordinate=polar_coordinate
         )
 
     def _create_direction_vector_grid(self) -> Vectors3D:

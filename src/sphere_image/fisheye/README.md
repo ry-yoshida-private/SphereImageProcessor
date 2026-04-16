@@ -2,18 +2,17 @@
 
 ## Overview
 
-This package maps fisheye input to a pinhole-like image by sampling the fisheye texture along rays derived from output FOV and an optional world rotation. Shared logic lives on the abstract `FisheyeProcessor`; concrete models live under `processors/`.
+This package maps fisheye input to a pinhole-like image by sampling the fisheye texture along rays derived from output FOV and an optional world rotation. Shared logic lives on `FisheyeProcessor`; projection-specific radius equations are selected by `FisheyeProjectionMethod`.
 
-Implemented projection models: `EQUIDISTANT`, `ORTHOGRAPHIC`, `STEREOGRAPHIC`, and `EQUISOLID`. Details for each concrete processor are in [processors/README.md](./processors/README.md).
+Implemented projection models: `EQUIDISTANT`, `ORTHOGRAPHIC`, `STEREOGRAPHIC`, and `EQUISOLID`.
 
 ## Components
 
 | Component | Description |
 | --- | --- |
 | [parameter.py](./parameter.py) | `FisheyeProcessorParameters` (FOV, resolution, method, vertical flip) and `build_processor()`. |
-| [method.py](./method.py) | `FisheyeProjectionMethod` enum. |
-| [processor.py](./processor.py) | Abstract `FisheyeProcessor`: output direction grid, polar → normalized `(u, v)`, `remap()`. |
-| [processors/](./processors/) | Concrete processors for each supported fisheye projection model. |
+| [method.py](./method.py) | `FisheyeProjectionMethod` enum and per-model radius equation (`calculate_radius`). |
+| [processor.py](./processor.py) | `FisheyeProcessor` unified implementation: direction grid, polar → normalized `(u, v)`, `remap()`. |
 
 ## `FisheyeProcessorParameters`
 

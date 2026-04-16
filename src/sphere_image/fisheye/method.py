@@ -1,10 +1,8 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import TYPE_CHECKING, Type
-
-if TYPE_CHECKING:
-    from .processor import FisheyeProcessor
+import numpy as np
+from units import Angle
 
 class FisheyeProjectionMethod(Enum):
     """
@@ -26,27 +24,13 @@ class FisheyeProjectionMethod(Enum):
     STEREOGRAPHIC = "Stereographic"
     EQUISOLID = "Equisolid"
 
-    @property
-    def processor_class(self) -> Type[FisheyeProcessor]:
-        """
-        Return the processor class for the fisheye projection method.
-        
-        Returns:
-        --------
-        Type[FisheyeProcessor]
-            The processor class for the fisheye projection method.
-        """
+    def calculate_radius(self, f: float, angle: Angle) -> np.ndarray:
         match self:
-            case FisheyeProjectionMethod.ORTHOGRAPHIC:
-                from .processors import OrthographicFisheyeProcessor
-                return OrthographicFisheyeProcessor
             case FisheyeProjectionMethod.EQUIDISTANT:
-                from .processors import EquidistantFisheyeProcessor
-                return EquidistantFisheyeProcessor
+                return angle.value / f
+            case FisheyeProjectionMethod.ORTHOGRAPHIC:
+                return np.sin(angle.value) / np.sin(f)
             case FisheyeProjectionMethod.STEREOGRAPHIC:
-                from .processors import StereographicFisheyeProcessor
-                return StereographicFisheyeProcessor
+                return np.tan(angle.value / 2) / np.tan(f / 2)
             case FisheyeProjectionMethod.EQUISOLID:
-                from .processors import EquisolidFisheyeProcessor
-                return EquisolidFisheyeProcessor
-
+                return np.sin(angle.value / 2) / np.sin(f / 2)

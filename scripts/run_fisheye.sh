@@ -123,7 +123,7 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "${REPO_ROOT}"
 
 cmd=(
-  "${PYTHON_CMD}" -m src.sphere_image.fisheye.processors
+  "${PYTHON_CMD}" -m src.sphere_image.fisheye
   -i "${INPUT_IMAGE}"
   -o "${OUTPUT_IMAGE}"
   --method "${METHOD}"

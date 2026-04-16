@@ -5,7 +5,8 @@ import argparse
 import cv2
 import numpy as np
 
-from ...parameter import FisheyeProcessorParameters
+from .method import FisheyeProjectionMethod
+from .parameter import FisheyeProcessorParameters
 from rotation import RotationMatrix
 
 
@@ -14,19 +15,6 @@ def compose_rotation_matrix_from_euler(
     pitch_deg: float,
     roll_deg: float,
 ) -> RotationMatrix:
-    """
-    Build camera rotation matrix from Euler angles.
-
-    Axis convention:
-    - forward: +X
-    - right:   +Y
-    - up:      +Z
-
-    Angle convention:
-    - yaw   (+): look to the right (around +Z)
-    - pitch (+): look upward (around +Y)
-    - roll  (+): clockwise in image plane (around +X)
-    """
     yaw = np.deg2rad(yaw_deg)
     # Use negative sign so positive pitch means "look upward".
     pitch = -np.deg2rad(pitch_deg)
@@ -59,12 +47,21 @@ def compose_rotation_matrix_from_euler(
     return RotationMatrix(rotation_z @ rotation_y @ rotation_x)
 
 
-def build_equidistant_cli_parser() -> argparse.ArgumentParser:
-    """
-    Build CLI parser for equidistant fisheye remapping.
-    """
+def read_required_image(image_path: str) -> np.ndarray:
+    image = cv2.imread(image_path)
+    if image is None:
+        raise ValueError(f"Failed to read image: {image_path}")
+    return image
+
+
+def write_required_image(image_path: str, image: np.ndarray) -> None:
+    if not cv2.imwrite(image_path, image):
+        raise RuntimeError(f"Failed to write image: {image_path}")
+
+
+def build_cli_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Remap a fisheye image to an equidistant (rectilinear-style) view.",
+        description="Remap a fisheye image with a projection method.",
     )
     parser.add_argument(
         "-i",
@@ -102,31 +99,35 @@ def build_equidistant_cli_parser() -> argparse.ArgumentParser:
         default=0.0,
         help="Roll angle in degrees (+: clockwise image tilt).",
     )
+    parser.add_argument(
+        "--method",
+        choices=tuple(method.name.lower() for method in FisheyeProjectionMethod),
+        default=FisheyeProjectionMethod.EQUIDISTANT.name.lower(),
+        help="Single projection method to run.",
+    )
     return parser
 
 
-def build_processor_params(camera_pointing_up: bool | None) -> FisheyeProcessorParameters:
-    """
-    Build processor parameters from optional CLI override.
-    """
-    if camera_pointing_up is not None:
-        return FisheyeProcessorParameters(is_camera_pointing_up=camera_pointing_up)
-    return FisheyeProcessorParameters()
+def main() -> None:
+    parser = build_cli_parser()
+    args = parser.parse_args()
+    image = read_required_image(args.input)
+
+    method = FisheyeProjectionMethod[args.method.upper()]
+    params = FisheyeProcessorParameters(method=method)
+    if args.camera_pointing_up is not None:
+        params.is_camera_pointing_up = args.camera_pointing_up
+
+    rotation_matrix = compose_rotation_matrix_from_euler(
+        yaw_deg=args.yaw_deg,
+        pitch_deg=args.pitch_deg,
+        roll_deg=args.roll_deg,
+    )
+    processor = params.build_processor(image=image)
+    output_image = processor.run_pipeline(rotation_matrix=rotation_matrix)
+    write_required_image(args.output, output_image)
+    print(f"saved {args.method}: {args.output}")
 
 
-def read_required_image(image_path: str) -> np.ndarray:
-    """
-    Read image file and raise when not found.
-    """
-    image = cv2.imread(image_path)
-    if image is None:
-        raise ValueError(f"Failed to read image: {image_path}")
-    return image
-
-
-def write_required_image(image_path: str, image: np.ndarray) -> None:
-    """
-    Write image file and raise when write fails.
-    """
-    if not cv2.imwrite(image_path, image):
-        raise RuntimeError(f"Failed to write image: {image_path}")
+if __name__ == "__main__":
+    main()

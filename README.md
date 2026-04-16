@@ -30,13 +30,19 @@ pip install -r requirements.txt
 import cv2
 from rotation import RotationMatrix
 
-from sphere_image.parameter import FisheyeProcessorParameters
-from sphere_image.processors import EquidistantFisheyeProcessor
+from sphere_image.fisheye import (
+    FisheyeProjectionMethod,
+    FisheyeProcessorParameters,
+)
 
 image = cv2.imread("input.jpg")
-params = FisheyeProcessorParameters()
-processor = EquidistantFisheyeProcessor(image=image, params=params)
+params = FisheyeProcessorParameters(method=FisheyeProjectionMethod.EQUIDISTANT)
+processor = params.build_processor(image=image)
 out = processor.run_pipeline(rotation_matrix=RotationMatrix.unit_matrix())
 ```
 
-A small CLI lives in `sphere_image.processors.equidistant`; see [src/sphere_image/processors/README.md](src/sphere_image/processors/README.md).
+CLI entrypoint:
+
+```bash
+python -m src.sphere_image.fisheye --help
+```

@@ -42,6 +42,18 @@ class FisheyeProcessorParameters:
     output_image_h: int = 720
     is_camera_pointing_up: bool = True
 
+    def __post_init__(self) -> None:
+        for field_name, angle in (
+            ("camera_hfov", self.camera_hfov),
+            ("camera_vfov", self.camera_vfov),
+            ("output_hfov", self.output_hfov),
+        ):
+            value = np.asarray(angle.value)
+            if value.size != 1:
+                raise ValueError(
+                    f"{field_name} must contain exactly one element, got {value.size}."
+                )
+
     @property
     def aspect_ratio(self) -> float:
         return self.output_image_w / self.output_image_h
@@ -55,7 +67,7 @@ class FisheyeProcessorParameters:
 
     def build_processor(self, image: np.ndarray) -> FisheyeProcessor:
         """
-        Return a concrete FisheyeProcessor for self.method.
+        Build a fisheye processor configured with this parameter set.
 
         Parameters
         ----------
@@ -65,6 +77,8 @@ class FisheyeProcessorParameters:
         Returns
         -------
         FisheyeProcessor
-            The concrete FisheyeProcessor for self.method.
+            Processor instance that applies self.method in radius mapping.
         """
-        return self.method.processor_class(image=image, params=self)
+        from .processor import FisheyeProcessor
+
+        return FisheyeProcessor(image=image, params=self)
