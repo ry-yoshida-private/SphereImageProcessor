@@ -1,15 +1,30 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import TYPE_CHECKING, Type
-
-if TYPE_CHECKING:
-    from .processor import EquirectangularProcessor
 
 
 class EquirectangularProjectionMethod(Enum):
     """
     Method for remapping from equirectangular image.
+
+    Attributes
+    ----------
+    PERSPECTIVE: EquirectangularProjectionMethod
+        Perspective projection.
+    ORTHOGRAPHIC: EquirectangularProjectionMethod
+        Orthographic projection.
+    STEREOGRAPHIC: EquirectangularProjectionMethod
+        Stereographic projection.
+    EQUIDISTANT: EquirectangularProjectionMethod
+        Equidistant projection.
+    EQUAL_AREA: EquirectangularProjectionMethod
+        Equal-area projection.
+    CYLINDRICAL: EquirectangularProjectionMethod
+        Cylindrical projection.
+    MERCATOR: EquirectangularProjectionMethod
+        Mercator projection.
+    LAMBERT_CYLINDRICAL: EquirectangularProjectionMethod
+        Lambert cylindrical projection.
     """
 
     PERSPECTIVE = "Perspective"
@@ -20,13 +35,3 @@ class EquirectangularProjectionMethod(Enum):
     CYLINDRICAL = "Cylindrical"
     MERCATOR = "Mercator"
     LAMBERT_CYLINDRICAL = "LambertCylindrical"
-
-    @property
-    def processor_class(self) -> Type[EquirectangularProcessor]:
-        match self:
-            case EquirectangularProjectionMethod.PERSPECTIVE:
-                from .processors import PerspectiveEquirectangularProcessor
-
-                return PerspectiveEquirectangularProcessor
-            case _:
-                raise ValueError(f"Not implemented error. -> method: {self}")

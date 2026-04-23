@@ -19,10 +19,19 @@ classifiers = [
 dependencies = [
     "numpy",
     "opencv-contrib-python",
+    "matplotlib",
     "units @ git+https://github.com/ry-yoshida-private/Units.git",
     "rotation @ git+https://github.com/ry-yoshida-private/Rotation.git",
     "geometry @ git+https://github.com/ry-yoshida-private/Geometry.git",
 ]
+
+[dependency-groups]
+dev = [
+    "ipykernel",
+]
+
+[tool.uv]
+default-groups = ["dev"]
 
 [project.urls]
 Homepage = "https://github.com/ry-yoshida-private/FisheyeImage"

@@ -77,7 +77,7 @@ class FisheyeProcessor:
             forward_index=0,
             right_index=1,
         )
-        max_incident_angle = float(self.params.camera_hfov.radian[0] / 2)
+        max_incident_angle = float(self.params.camera_fov.radian[0] / 2)
         radius = self.params.method.calculate_radius(
             f=max_incident_angle,
             angle=azimuthal_angles,
@@ -183,8 +183,8 @@ class FisheyeProcessor:
         np.ndarray
             The remapped image.
         """
-        x_pixel_coordinate = (u_coordinates * self.image.shape[1]).astype(np.float32)
-        y_pixel_coordinate = (v_coordinates * self.image.shape[0]).astype(np.float32)
+        x_pixel_coordinate = (u_coordinates * (self.image.shape[1] - 1)).astype(np.float32)
+        y_pixel_coordinate = (v_coordinates * (self.image.shape[0] - 1)).astype(np.float32)
 
         remapped_image = cv2.remap(
             self.image,

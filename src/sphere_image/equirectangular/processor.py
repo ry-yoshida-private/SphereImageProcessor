@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 
 import cv2
@@ -8,17 +7,28 @@ import numpy as np
 
 from rotation import RotationMatrix
 
+from ..utils import SphericalCoordinates
+from .method import EquirectangularProjectionMethod
 from .parameter import EquirectangularProcessorParameters
 
 
 @dataclass
-class EquirectangularProcessor(ABC):
+class EquirectangularProcessor:
+    """
+    Equirectangular image remapping processor.
+
+    Attributes
+    ----------
+    image: np.ndarray
+        Source equirectangular image.
+    params: EquirectangularProcessorParameters
+        Parameters controlling projection and output geometry.
+    """
     image: np.ndarray
     params: EquirectangularProcessorParameters = field(
         default_factory=EquirectangularProcessorParameters
     )
 
-    @abstractmethod
     def _map_rotation_to_uv(
         self,
         rotation_matrix: RotationMatrix,
@@ -35,13 +45,47 @@ class EquirectangularProcessor(ABC):
         -------
         tuple[np.ndarray, np.ndarray]
             The u and v coordinates.
+
+        Raises
+        ------
+        ValueError
+            If the selected method is not implemented.
         """
+        if self.params.method is not EquirectangularProjectionMethod.PERSPECTIVE:
+            raise ValueError(f"Not implemented error. -> method: {self.params.method}")
+
+        direction_vectors = self._create_direction_vector_grid()
+        rotated_direction_vectors = direction_vectors @ rotation_matrix.T
+
+        x_coordinates = rotated_direction_vectors[:, 0]
+        y_coordinates = rotated_direction_vectors[:, 1]
+        z_coordinates = rotated_direction_vectors[:, 2]
+        spherical_coordinates = SphericalCoordinates.from_cartesian(
+            x_coordinates=x_coordinates,
+            y_coordinates=y_coordinates,
+            z_coordinates=z_coordinates,
+        )
+        u_coordinates = spherical_coordinates.u_coordinates
+        v_coordinates = spherical_coordinates.v_coordinates
+
+        return (
+            u_coordinates.reshape(self.params.output_image_h, self.params.output_image_w),
+            v_coordinates.reshape(self.params.output_image_h, self.params.output_image_w),
+        )
 
     def run_pipeline(self, rotation_matrix: RotationMatrix) -> np.ndarray:
         """
         Run the equirectangular remapping pipeline.
 
-        
+        Parameters
+        ----------
+        rotation_matrix: RotationMatrix
+            Rotation matrix applied before projecting to UV.
+
+        Returns
+        -------
+        np.ndarray
+            The remapped image.
         """
         u_coordinates, v_coordinates = self._map_rotation_to_uv(
             rotation_matrix=rotation_matrix
@@ -54,6 +98,11 @@ class EquirectangularProcessor(ABC):
     def _create_direction_vector_grid(self) -> np.ndarray:
         """
         Generate normalized 3D direction vectors for each output pixel.
+
+        Returns
+        -------
+        np.ndarray
+            Direction vectors shaped as (H*W, 3).
         """
         horizontal_coordinates = np.linspace(
             -np.tan(self.params.output_hfov.radian / 2),
@@ -88,9 +137,21 @@ class EquirectangularProcessor(ABC):
     ) -> np.ndarray:
         """
         Remap the image using normalized source coordinates.
+
+        Parameters
+        ----------
+        u_coordinates: np.ndarray
+            Normalized horizontal coordinates in source image space.
+        v_coordinates: np.ndarray
+            Normalized vertical coordinates in source image space.
+
+        Returns
+        -------
+        np.ndarray
+            The remapped image.
         """
-        x_pixel_coordinate = (u_coordinates * self.image.shape[1]).astype(np.float32)
-        y_pixel_coordinate = (v_coordinates * self.image.shape[0]).astype(np.float32)
+        x_pixel_coordinate = (u_coordinates * (self.image.shape[1] - 1)).astype(np.float32)
+        y_pixel_coordinate = (v_coordinates * (self.image.shape[0] - 1)).astype(np.float32)
         return cv2.remap(
             self.image,
             x_pixel_coordinate,
@@ -105,11 +166,29 @@ class EquirectangularProcessor(ABC):
         path: str,
         params: EquirectangularProcessorParameters | None = None,
     ) -> EquirectangularProcessor:
+        """
+        Build a processor by reading an image from disk.
+
+        Parameters
+        ----------
+        path: str
+            Input image path.
+        params: EquirectangularProcessorParameters | None
+            Optional parameter set. Defaults to freshly constructed parameters.
+
+        Returns
+        -------
+        EquirectangularProcessor
+            Processor initialized with loaded image and selected parameters.
+
+        Raises
+        ------
+        ValueError
+            If the image cannot be read from the provided path.
+        """
         image = cv2.imread(path)
         if image is None:
             raise ValueError(f"Failed to read image: {path}")
 
         selected_params = params or EquirectangularProcessorParameters()
-        if cls is EquirectangularProcessor:
-            return selected_params.build_processor(image=image)
         return cls(image=image, params=selected_params)
