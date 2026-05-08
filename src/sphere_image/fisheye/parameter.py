@@ -51,7 +51,7 @@ class FisheyeProcessorParameters:
     output_vfov: Angle = field(init=False)
 
     def __post_init__(self) -> None:
-        self.validate_params()
+        self._validate_params()
         self.output_hfov, self.output_vfov = self.output_basis.build_output_fovs(
             output_fov=self.output_fov,
             aspect_ratio=self.aspect_ratio,
@@ -84,7 +84,6 @@ class FisheyeProcessorParameters:
             Processor instance that applies self.method in radius mapping.
         """
         from .processor import FisheyeProcessor
-
         return FisheyeProcessor(image=image, params=self)
 
     @property
@@ -117,7 +116,7 @@ class FisheyeProcessorParameters:
             [0, 0, 1],
         ])
 
-    def validate_params(self) -> None:
+    def _validate_params(self) -> None:
         """
         Validate basic shape/value constraints for constructor inputs.
         

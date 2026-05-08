@@ -69,26 +69,26 @@ class FisheyeProcessor:
         direction_vectors: Vectors3D = self._create_direction_vector_grid()
         rotated_direction_vectors: Vectors3D = Vectors3D(
             value=direction_vectors.value @ rotation_matrix.T
-        )
+            )
         azimuthal_angles = rotated_direction_vectors.to_azimuthal_angles(
             up_index=2
-        )
+            )
         polar_angles = rotated_direction_vectors.to_polar_angles(
             forward_index=0,
             right_index=1,
-        )
+            )
         max_incident_angle = float(self.params.camera_fov.radian[0] / 2)
         radius = self.params.method.calculate_radius(
             f=max_incident_angle,
             angle=azimuthal_angles,
-        )
+            )
         polar_coordinate = PolarCoordinate(
             radius=radius,
             angle=polar_angles,
-        )
+            )
         return self._PolarCoordinate2NormalizedCartesianCoordinate(
             polar_coordinate=polar_coordinate
-        )
+            )
 
     def _create_direction_vector_grid(self) -> Vectors3D:
         """
@@ -110,25 +110,25 @@ class FisheyeProcessor:
             -np.tan(self.params.output_hfov.radian / 2),
             np.tan(self.params.output_hfov.radian / 2),
             self.params.output_image_w,
-        )
+            )
 
         vertical_coordinates = np.linspace(
             -np.tan(self.params.output_vfov.radian / 2),
             np.tan(self.params.output_vfov.radian / 2),
             self.params.output_image_h,
-        )
+            )
 
         if self.params.is_camera_pointing_up:
             vertical_coordinates *= -1
 
         horizontal_grid, vertical_grid = np.meshgrid(
             horizontal_coordinates, vertical_coordinates
-        )
+            )
         depth_grid = np.ones_like(horizontal_grid)
 
         direction_vectors = np.stack(
             [depth_grid, horizontal_grid, vertical_grid], axis=-1
-        )
+            )
         direction_vectors /= np.linalg.norm(direction_vectors, axis=-1, keepdims=True)
         return Vectors3D(value=direction_vectors.reshape(-1, 3))
 
