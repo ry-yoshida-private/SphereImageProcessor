@@ -22,6 +22,7 @@ dependencies = [
     "matplotlib",
     "units @ git+https://github.com/ry-yoshida-private/Units.git",
     "rotation @ git+https://github.com/ry-yoshida-private/Rotation.git",
+    "handedness-rotation @ git+https://github.com/ry-yoshida-private/HandednessRotation.git",
     "geometry @ git+https://github.com/ry-yoshida-private/Geometry.git",
 ]
 

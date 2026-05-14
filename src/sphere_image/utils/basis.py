@@ -23,6 +23,25 @@ class OutputFovBasis(Enum):
         output_fov: Angle,
         aspect_ratio: float,
     ) -> tuple[Angle, Angle]:
+        """
+        Derive horizontal and vertical output FoVs from one specified FoV and aspect ratio.
+
+        aspect_ratio is width / height. Under a pinhole model,
+        tan(half_HFOV) / tan(half_VFOV) = aspect_ratio, so the other FoV follows from
+        the basis axis that output_fov applies to.
+
+        Parameters
+        ----------
+        output_fov
+            FoV along the basis axis (vertical if VERTICAL, horizontal if HORIZONTAL).
+        aspect_ratio
+            Output image width divided by height.
+
+        Returns
+        -------
+        tuple[Angle, Angle]
+            (output_hfov, output_vfov) in degrees.
+        """
         base_fov_radian = np.asarray(output_fov.radian, dtype=np.float64)
         half_tangent = np.tan(base_fov_radian / 2.0)
 

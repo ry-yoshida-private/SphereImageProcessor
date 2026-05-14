@@ -24,13 +24,36 @@ class FisheyeProjectionMethod(Enum):
     STEREOGRAPHIC = "Stereographic"
     EQUISOLID = "Equisolid"
 
-    def calculate_radius(self, f: float, angle: Angle) -> np.ndarray:
+    def calculate_radius(
+        self, 
+        f: float, 
+        angle: Angle,
+    ) -> np.ndarray:
+        """
+        Normalized radial coordinate on the fisheye image for each incident angle.
+
+        All angles below are in radians. θ is the angle from the optical axis; f is half the
+        circular camera FoV. Each law maps θ to r so that r = 1 at the fisheye rim when θ = f.
+
+        Parameters
+        ----------
+        f: float
+            Half camera field of view in radians.
+        angle: Angle
+            Incident angles.
+
+        Returns
+        -------
+        np.ndarray
+            Dimensionless radius in [0, 1] for θ in [0, f].
+        """
+        theta = np.asarray(angle.radian, dtype=np.float64)
         match self:
             case FisheyeProjectionMethod.EQUIDISTANT:
-                return angle.value / f
+                return theta / f
             case FisheyeProjectionMethod.ORTHOGRAPHIC:
-                return np.sin(angle.value) / np.sin(f)
+                return np.sin(theta) / np.sin(f)
             case FisheyeProjectionMethod.STEREOGRAPHIC:
-                return np.tan(angle.value / 2) / np.tan(f / 2)
+                return np.tan(theta / 2) / np.tan(f / 2)
             case FisheyeProjectionMethod.EQUISOLID:
-                return np.sin(angle.value / 2) / np.sin(f / 2)
+                return np.sin(theta / 2) / np.sin(f / 2)
